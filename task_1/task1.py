@@ -58,7 +58,7 @@ def kMeans(kValue, data, initial_centroids):
     stop= False
     previousLoss = float('inf')
     iteration = 0
-    thresold = 0.0001
+    thresold = 0.001
     while not stop:
         iteration += 1
         print(iteration)
@@ -100,22 +100,30 @@ def generateImageFromMatrix(imageMatrix, file_name = 'my_result.jpeg'):
     imgResult = Image.fromarray(imageMatrix.astype(np.uint8), 'RGB')
     imgResult.save(file_name)
 
-def kMeansRun(dataset, k, outfileName):
+def kMeansRun(dataset, init, k,inputFile, outfileName):
     dataNormalized = dataset.reshape((len(dataset)*len(dataset[0])),3)
+    if init == 'random':
+        initial_centroids = generateRandomCenters(k)
+    else:
+        im = Image.open(inputFile)
+        plt.imshow(im)
+        points = plt.ginput(k, show_clicks=True) 
+        initial_centroids = np.asarray(points)
     initial_centroids = generateRandomCenters(k)
     resultLabels, resultCentroids, lossValues = kMeans(k,dataNormalized, initial_centroids)
     imageMatrix = constructImageMatrix(resultLabels, resultCentroids, np.shape(dataset))
-    generateImageFromMatrix(imageMatrix, file_name="k = "+str(k)+" quantized.jpeg")
+    generateImageFromMatrix(imageMatrix, file_name=inputFile +" k = "+str(k)+" quantized.jpeg")
     return resultLabels, lossValues
 
 
 def __main__():
     k = int(sys.argv[1])
     fileName = sys.argv[2]
+    init = 'random'
+    if len(sys.argv) >= 3:
+        init = sys.argv[3]
     image = Image.open(fileName)
     dataset = np.asarray(image)
-    dataNormalized = dataset.reshape((len(dataset)*len(dataset[0])),3)
-    initial_centroids = generateRandomCenters(k)
-    resultingLabels, lossData = kMeansRun(dataset, k=16,outfileName="4quantized")
+    resultingLabels, lossData = kMeansRun(dataset, init, k, inputFile=fileName,  outfileName="4quantized")
 
 __main__()
